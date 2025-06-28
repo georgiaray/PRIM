@@ -87,20 +87,12 @@ def variable_coverage_table(df_pivot, years):
 
     return coverage_df
 
-def assign_sector(column_name, sector_keywords):
-    col_lower = column_name.lower()
-    
-    # Check all sectors except Electricity first
-    for sector in sector_keywords:
-        if sector != "Electricity":
-            for keyword in sector_keywords[sector]:
-                if keyword.lower() in col_lower:
-                    return sector
+def assign_sector(column_name, sector_assignment):
 
-    # Then check Electricity last
-    for keyword in sector_keywords["Electricity"]:
-        if keyword.lower() in col_lower:
-            return "Electricity"
+    sector_map = dict(zip(sector_assignment['Variable'], sector_assignment['Sector']))
+    
+    if column_name in sector_map:
+        return sector_map[column_name]
     
     print(f"Unassigned column → '{column_name}' → sector: 'Other'")
     return "Other"
@@ -419,35 +411,27 @@ def fuzzy_merge(df_main, df_ref, main_key='model_scenario', ref_key='model_scena
         print(f"  - {item}")
 
     return df_final
+
+def create_sector_dfs(df, sector_assignment, descriptive_cols=None):
     
+    if descriptive_cols is None:
+        descriptive_cols = [col for col in ["Category", "temp_bucket"] if col in df.columns]
 
-sector_keywords = {
-    "Electricity": ["electricity", "power", "grid", "Elec"],
-    "Transport": ["transport", "vehicle", "freight", "passenger", "Trans", "Pass"],
-    "Industry": ["industry", "cement", "steel", "manufacturing", "Ind"],
-    "Buildings": ["building", "residential", "commercial", "Res", "ResCom"],
-    "Agriculture": ["agriculture", "land", "livestock", "crop", "afolu", "Agri", "Crop", "LandU", "LandCov", "Affor"]
-}
+    # Build mapping from variable to sector
+    sector_map = dict(zip(sector_assignment['Variable'], sector_assignment['Sector']))
 
-def create_sector_dfs(df): 
-    #create separate dfs with just the columns relevant to each sector 
-    column_sectors = []
-    for column in df.columns: 
-        sector = assign_sector(column, sector_keywords)
-        column_sectors.append(sector)
-
-    column_to_sector = dict(zip(df.columns, column_sectors))
-
-    descriptive_cols = ['model', 'scenario', 'Category', 'temp_bucket']
-
+    # Group variables by sector
     sector_column_map = defaultdict(list)
-    for col, sector in column_to_sector.items():
-        if sector and sector != 'descriptive' and col not in descriptive_cols:
+    for col in df.columns:
+        if col in sector_map:
+            sector = sector_map[col]
             sector_column_map[sector].append(col)
 
+    # Build sector-specific DataFrames
     sector_dfs = {}
     for sector, cols in sector_column_map.items():
-        sector_dfs[sector] = df[descriptive_cols + cols]
+        valid_descriptive = [col for col in descriptive_cols if col in df.columns]
+        sector_dfs[sector] = df[valid_descriptive + cols]
 
     return sector_dfs
 
@@ -480,30 +464,38 @@ def plot_sector_boxplots(df, sector_name, variables=None, temp_bucket_col='temp_
         descriptive_cols = ['model', 'scenario', 'Category', temp_bucket_col]
         variables = [col for col in df.columns if col not in descriptive_cols]
 
-    # Melt the dataframe to long format for plotting
+    # Melt to long format for plotting
     sector_df = df.melt(id_vars=[temp_bucket_col], value_vars=variables,
                         var_name='Variable', value_name='Value')
     
-    # drop any rows with NaN values
+    # Drop NaN rows
     sector_df = sector_df.dropna()
 
-    # Create the boxplot
-    plt.figure(figsize=(12, 6))
-    sns.boxplot(data=sector_df, x=temp_bucket_col, y='Value', hue='Variable', showfliers=False)
+    # Combine '2.0' and 'Above 2.0' into one group
+    sector_df[temp_bucket_col] = sector_df[temp_bucket_col].replace({
+        '2.0': '≥ 2.0',
+        'Above 2.0': '≥ 2.0'
+    })
 
-    # Set the title and labels
+    # Create ordered categories if desired (1.5 first, then ≥ 2.0)
+    category_order = ['1.5', '≥ 2.0']
+
+    # Boxplot
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(data=sector_df, x=temp_bucket_col, y='Value', hue='Variable',
+                showfliers=False, order=category_order)
+
     plt.title(f'{sector_name} Sector Boxplot')
     plt.xlabel('Temperature Bucket')
     plt.ylabel('Value')
     plt.legend(title='Variable', bbox_to_anchor=(1.05, 1), loc='upper left')
-
-    # Display the plot
     plt.tight_layout()
     plt.show()
 
+
 def logistic_regression(df):
     df['y'] = df['temp_bucket'].apply(lambda x: 1 if x in ['1.5', '2.0'] else 0)
-    X = df.drop(columns=['model', 'scenario', 'Category', 'temp_bucket', 'y'])  # Drop y column for features
+    X = df.drop(columns=['Category', 'temp_bucket', 'y'])  # Drop y column for features
     y = df['y']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     scaler = StandardScaler()
@@ -588,9 +580,15 @@ def balance_binary_classes(X, y, method="downsample"):
     return X_balanced, y_balanced
 
 def get_x_and_Y(df, temp_target):
+    # Ensure temp_target is a list even if a single string
+    if isinstance(temp_target, str):
+        temp_target = [temp_target]
+
+    df = df.copy()  # Avoid modifying original DataFrame
+
     df['y'] = df['temp_bucket'].apply(lambda x: 0 if x in temp_target else 1)
 
-    X = df.drop(columns=['model', 'scenario', 'Category', 'temp_bucket', 'y'])
+    X = df.drop(columns=['Category', 'temp_bucket', 'y'])
     y = df['y']
 
     X = X.reset_index(drop=True)
@@ -598,17 +596,12 @@ def get_x_and_Y(df, temp_target):
 
     X_log = X.copy()
     for col in X.columns:
-        if (X[col] > 0).all():  
+        if (X[col] > 0).all():
             X_log[col] = np.log1p(X[col])
         else:
-            X_log[col] = X[col] 
+            X_log[col] = X[col]
 
-    X_log.fillna(X_log.mean(), inplace=True)
-
-    scaler = StandardScaler()
-    X_scaled = pd.DataFrame(scaler.fit_transform(X_log), columns=X_log.columns)
-
-    return X_scaled, y
+    return X_log, y
 
 def prim_analysis(X_scaled, y, visualize=True):
     # Fit PRIM model
@@ -725,7 +718,13 @@ def perform_rf(X_df, labels):
 
     return top_importances
 
-def jaccard_similarity(set1, set2):
+def positional_match_ratio(list1, list2):
+    min_len = min(len(list1), len(list2))
+    matches = sum(1 for i in range(min_len) if list1[i] == list2[i])
+    return matches / min_len
+
+def jaccard_similarity(list1, list2):
+    set1, set2 = set(list1), set(list2)
     return len(set1 & set2) / len(set1 | set2)
 
 def preprocess_data(df, exclude_columns=['model', 'scenario', 'Category', 'temp_bucket', 'y']):
@@ -760,7 +759,7 @@ def scale_and_impute(X):
     X_scaled = scaler.fit_transform(X_imputed)
     return X_scaled, scaler
 
-def apply_pca(X_scaled, n_components=15):
+def apply_pca(X_scaled, n_components=5):
     pca = PCA(n_components=n_components)
     X_pca = pca.fit_transform(X_scaled)
     plt.figure(figsize=(8, 4))
@@ -812,28 +811,6 @@ def shap_analysis(X, y):
     print(f"{top_k_80} variables account for 80% of total SHAP importance.")
 
     return shap_importance
-
-def whole_shap_query(X, y, limits, restricted_vars): 
-    _, coefs = log_reg_simple(X, y)
-    shap_importance = shap_analysis(X, y)
-    prim_df = rank_box_variables(limits, restricted_vars)
-
-    # Merge all
-    combined = prim_df.merge(coefs, on="Variable", how="outer")
-    combined = combined.merge(shap_importance, on="Variable", how="outer")
-
-    # Sort by any column you like
-    combined_sorted = combined.sort_values("Box Range Width")  
-
-    shap_75 = combined_sorted['SHAP Importance'].quantile(0.70)
-    range_25 = combined_sorted['Box Range Width'].quantile(0.30)
-
-    query = combined_sorted[
-        (combined_sorted['SHAP Importance'] > shap_75) &
-        (combined_sorted['Box Range Width'] < range_25)
-    ]
-
-    return query
 
 def get_cluster_variable_mapping(df_clustered, cluster_to_bucket, top_n=10):
 
