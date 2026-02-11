@@ -45,6 +45,41 @@ from scripts.pca_clustering_analysis import (
     scale_and_impute
 )
 
+# Category to temp_bucket mapping (as defined in data/README.md)
+CATEGORY_TO_TEMP_BUCKET = {
+    'C1': '1.5', 
+    'C2': '1.5', 
+    'C3': '2', 
+    'C4': '2', 
+    'C5': 'above 2', 
+    'C6': 'above 2', 
+    'C7': 'above 2', 
+    'C8': 'above 2', 
+    'failed-vetting': 'failed-vetting', 
+    'no-climate-assessment': 'no-climate-assessment'
+}
+
+
+def categorize_temp_bucket_from_category(category_value):
+    """
+    Convert Category value to temp_bucket value.
+    
+    Parameters:
+    -----------
+    category_value : str or None
+        Category value (e.g., 'C1', 'C2', 'failed-vetting', etc.)
+        
+    Returns:
+    --------
+    str or None
+        temp_bucket value, or None if category_value is None/NaN
+    """
+    if pd.isna(category_value) or category_value is None:
+        return None
+    cat = str(category_value).strip()
+    # Use mapping, default to original value if not in mapping
+    return CATEGORY_TO_TEMP_BUCKET.get(cat, cat)
+
 
 class AnalysisPipeline:
     """Main analysis pipeline orchestrator."""
@@ -178,7 +213,8 @@ class AnalysisPipeline:
         Parameters:
         -----------
         category_mapping_path : str, optional
-            Path to CSV file with model, scenario, and Category columns to join
+            DEPRECATED: Category is now expected to be in the data file itself.
+            This parameter is kept for backward compatibility but will be ignored.
         """
         print("\n" + "="*60)
         print("Loading Data")
@@ -214,110 +250,15 @@ class AnalysisPipeline:
         print(f"Loaded {len(df)} rows, {len(df.columns)} columns")
         print(f"Columns: {list(df.columns)}")
         
-        # Join Category mapping if provided and Category not already in data
-        if category_mapping_path:
-            # Check if Category is already in data (either in columns or index)
-            has_category_in_cols = 'Category' in df.columns if not isinstance(df.columns, pd.MultiIndex) else False
-            has_category_in_index = isinstance(df.index, pd.MultiIndex) and 'Category' in df.index.names
-            
-            if not has_category_in_cols and not has_category_in_index:
-                category_df = self.load_category_mapping(category_mapping_path)
-                if category_df is not None:
-                    # For pivoted data, we need to reset index to join, then rebuild
-                    if isinstance(df.columns, pd.MultiIndex):
-                        print("Joining Category mapping with pivoted data...")
-                        # Get original index names before reset
-                        original_index_names = [name for name in df.index.names if name]
-                        
-                        # Store the MultiIndex columns structure (data columns only, excluding index columns)
-                        # After reset_index(), index columns become regular columns with empty second level
-                        # We need to preserve the data columns structure
-                        data_columns = [col for col in df.columns if col[0] not in original_index_names]
-                        
-                        # Reset index completely to get regular columns
-                        df_reset = df.reset_index()
-                        
-                        # Store the MultiIndex column structure to restore later
-                        original_multiindex_cols = df_reset.columns.copy() if isinstance(df_reset.columns, pd.MultiIndex) else None
-                        
-                        # Convert MultiIndex columns to regular columns for merging
-                        # This is necessary because pandas can't merge MultiIndex columns with regular columns
-                        if isinstance(df_reset.columns, pd.MultiIndex):
-                            # Flatten MultiIndex columns to regular string columns
-                            new_cols = []
-                            col_mapping = {}  # Map old MultiIndex col -> new string col name
-                            for col in df_reset.columns:
-                                if isinstance(col, tuple):
-                                    # For index columns like ('model', ''), use just the first part
-                                    if col[1] == '' or pd.isna(col[1]):
-                                        new_col = str(col[0])
-                                    else:
-                                        # For data columns like ('Variable', 2030), create a string representation
-                                        new_col = f"{col[0]} ({col[1]})"
-                                    col_mapping[col] = new_col
-                                    new_cols.append(new_col)
-                                else:
-                                    new_cols.append(str(col))
-                            
-                            # Rename columns to regular strings
-                            df_reset.columns = new_cols
-                        
-                        # Ensure category_df columns are regular (not MultiIndex) and lowercase
-                        category_subset = category_df[['model', 'scenario', 'Category']].copy()
-                        category_subset.columns = [str(col).lower() if col in ['model', 'scenario'] else str(col) 
-                                                  for col in category_subset.columns]
-                        
-                        # Merge with category mapping using regular columns
-                        merge_keys = ['model', 'scenario']
-                        df_reset = df_reset.merge(
-                            category_subset, 
-                            on=merge_keys,
-                            how='left'
-                        )
-                        
-                        # Add Category to index if not already there
-                        if 'Category' not in original_index_names:
-                            original_index_names.append('Category')
-                        
-                        # Set index back - use only the columns that exist
-                        available_index_cols = [col for col in original_index_names if col in df_reset.columns]
-                        df = df_reset.set_index(available_index_cols)
-                        
-                        # Restore MultiIndex columns if they were converted to regular columns
-                        # The columns should now be in format "Variable (2030)" - convert back to MultiIndex
-                        if not isinstance(df.columns, pd.MultiIndex) and original_multiindex_cols is not None:
-                            # Check if columns match the pattern "Variable (Year)"
-                            new_cols = []
-                            for col in df.columns:
-                                if '(' in str(col) and ')' in str(col):
-                                    # Parse "Variable (Year)" format
-                                    parts = str(col).rsplit('(', 1)
-                                    if len(parts) == 2:
-                                        var_name = parts[0].strip()
-                                        year_str = parts[1].rstrip(')').strip()
-                                        try:
-                                            year = int(year_str)
-                                            new_cols.append((var_name, year))
-                                        except ValueError:
-                                            new_cols.append(col)
-                                else:
-                                    new_cols.append(col)
-                            
-                            # Only convert to MultiIndex if we have tuple columns
-                            if any(isinstance(c, tuple) for c in new_cols):
-                                df.columns = pd.MultiIndex.from_tuples(new_cols)
-                        
-                        print(f"  Joined Category: {df_reset['Category'].value_counts().to_dict() if 'Category' in df_reset.columns else 'Failed'}")
-                        print(f"  Columns are MultiIndex: {isinstance(df.columns, pd.MultiIndex)}")
-                    else:
-                        print("Joining Category mapping with data...")
-                        # For non-pivoted data, merge directly
-                        df = df.merge(
-                            category_df[['model', 'scenario', 'Category']].copy(), 
-                            on=['model', 'scenario'], 
-                            how='left'
-                        )
-                        print(f"  Joined Category: {df['Category'].value_counts().to_dict() if 'Category' in df.columns else 'Failed'}")
+        # Check if Category is in the data
+        has_category_in_cols = 'Category' in df.columns if not isinstance(df.columns, pd.MultiIndex) else False
+        has_category_in_index = isinstance(df.index, pd.MultiIndex) and 'Category' in df.index.names
+        
+        if not has_category_in_cols and not has_category_in_index:
+            print("Warning: Category column not found in data.")
+            if category_mapping_path:
+                print("  Note: category_mapping_path parameter is deprecated. Category should be in the data file.")
+            print("  Continuing without Category. temp_bucket will not be created.")
         
         # Check if data is already pivoted (MultiIndex columns)
         if isinstance(df.columns, pd.MultiIndex):
@@ -330,19 +271,7 @@ class AnalysisPipeline:
                     print("Creating temp_bucket from Category (in index)...")
                     df_reset = self.df_pivot.reset_index()
                     
-                    def categorize_temp_bucket(row):
-                        """Convert Category to temperature bucket."""
-                        if pd.isna(row.get('Category', None)):
-                            return 'Unknown'
-                        cat = str(row['Category']).upper()
-                        if cat in ['C1', 'C2']:
-                            return '1.5'
-                        elif cat in ['C3', 'C4']:
-                            return '2.0'
-                        else:
-                            return 'Above 2.0'
-                    
-                    df_reset['temp_bucket'] = df_reset.apply(categorize_temp_bucket, axis=1)
+                    df_reset['temp_bucket'] = df_reset['Category'].apply(categorize_temp_bucket_from_category)
                     
                     # Rebuild index - replace Category with temp_bucket
                     new_index_cols = [col for col in index_names if col != 'Category'] + ['temp_bucket']
@@ -355,15 +284,9 @@ class AnalysisPipeline:
             if 'variable' in df.columns and 'year' in df.columns:
                 print("Detected long format data. Pivoting to wide format...")
                 
-                # Join Category mapping if provided and Category not already in data
-                if category_mapping_path and 'Category' not in df.columns:
-                    category_df = self.load_category_mapping(category_mapping_path)
-                    if category_df is not None:
-                        print("Joining Category mapping with data...")
-                        df = df.merge(category_df[['model', 'scenario', 'Category']], 
-                                     on=['model', 'scenario'], 
-                                     how='left')
-                        print(f"  Joined Category: {df['Category'].value_counts().to_dict() if 'Category' in df.columns else 'Failed'}")
+                # Category should already be in the data - no merging needed
+                if 'Category' not in df.columns:
+                    print("  Warning: Category column not found. temp_bucket will not be created.")
                 
                 # Pivot: variable and year become MultiIndex columns
                 # Keep model, scenario, region, Category/temp_bucket as index
@@ -381,19 +304,7 @@ class AnalysisPipeline:
                 # Create temp_bucket from Category before pivoting if Category exists
                 if 'Category' in df.columns and 'temp_bucket' not in df.columns:
                     print("Creating temp_bucket from Category column...")
-                    def categorize_temp_bucket(row):
-                        """Convert Category to temperature bucket."""
-                        if pd.isna(row.get('Category', None)):
-                            return 'Unknown'
-                        cat = str(row['Category']).upper()
-                        if cat in ['C1', 'C2']:
-                            return '1.5'
-                        elif cat in ['C3', 'C4']:
-                            return '2.0'
-                        else:
-                            return 'Above 2.0'
-                    
-                    df['temp_bucket'] = df.apply(categorize_temp_bucket, axis=1)
+                    df['temp_bucket'] = df['Category'].apply(categorize_temp_bucket_from_category)
                     print(f"  Created temp_bucket: {df['temp_bucket'].value_counts().to_dict()}")
                     
                     # Add temp_bucket to id_cols and remove Category
@@ -597,23 +508,36 @@ class AnalysisPipeline:
             print(f"   Error filtering scenarios: {e}")
             return None
         
+        # Check for Category/temp_bucket in columns or index
+        has_temp_bucket_col = 'temp_bucket' in filtered_df.columns
+        has_category_col = 'Category' in filtered_df.columns
+        
+        # Also check the original df_pivot index in case reset_index didn't bring it over
+        has_temp_bucket_idx = isinstance(self.df_pivot.index, pd.MultiIndex) and 'temp_bucket' in self.df_pivot.index.names
+        has_category_idx = isinstance(self.df_pivot.index, pd.MultiIndex) and 'Category' in self.df_pivot.index.names
+        
         # Create temp_bucket from Category if needed
-        if 'temp_bucket' not in filtered_df.columns and 'Category' in filtered_df.columns:
-            print("   Creating temp_bucket from Category column...")
-            def categorize_temp_bucket(row):
-                """Convert Category to temperature bucket."""
-                if pd.isna(row.get('Category', None)):
-                    return 'Unknown'
-                cat = str(row['Category']).upper()
-                if cat in ['C1', 'C2']:
-                    return '1.5'
-                elif cat in ['C3', 'C4']:
-                    return '2.0'
-                else:
-                    return 'Above 2.0'
-            
-            filtered_df['temp_bucket'] = filtered_df.apply(categorize_temp_bucket, axis=1)
-            print(f"   Created temp_bucket: {filtered_df['temp_bucket'].value_counts().to_dict()}")
+        if not has_temp_bucket_col:
+            if has_category_col:
+                print("   Creating temp_bucket from Category column...")
+                filtered_df['temp_bucket'] = filtered_df['Category'].apply(categorize_temp_bucket_from_category)
+                print(f"   Created temp_bucket: {filtered_df['temp_bucket'].value_counts().to_dict()}")
+            elif has_category_idx:
+                # Category is in the original index but wasn't brought over by reset_index
+                # Need to merge it back from the original index
+                print("   Category found in original index. Merging back...")
+                original_with_category = self.df_pivot.reset_index()[['model', 'scenario', 'Category']].drop_duplicates()
+                filtered_df = filtered_df.merge(original_with_category, on=['model', 'scenario'], how='left')
+                
+                # Now create temp_bucket
+                filtered_df['temp_bucket'] = filtered_df['Category'].apply(categorize_temp_bucket_from_category)
+                print(f"   Created temp_bucket: {filtered_df['temp_bucket'].value_counts().to_dict()}")
+            elif has_temp_bucket_idx:
+                # temp_bucket is in the original index but wasn't brought over
+                print("   temp_bucket found in original index. Merging back...")
+                original_with_temp = self.df_pivot.reset_index()[['model', 'scenario', 'temp_bucket']].drop_duplicates()
+                filtered_df = filtered_df.merge(original_with_temp, on=['model', 'scenario'], how='left')
+                print(f"   Merged temp_bucket: {filtered_df['temp_bucket'].value_counts().to_dict() if 'temp_bucket' in filtered_df.columns else 'Failed'}")
         
         # 2. Prepare features and target
         print("\n2. Preparing features and target...")
@@ -629,6 +553,8 @@ class AnalysisPipeline:
             y = (filtered_df['Category'].isin(['C1', 'C2'])).astype(int)
         else:
             print("   Warning: No temperature bucket column found. Skipping analysis.")
+            print(f"   Available columns: {list(filtered_df.columns)}")
+            print(f"   Original index names: {self.df_pivot.index.names if isinstance(self.df_pivot.index, pd.MultiIndex) else 'Not MultiIndex'}")
             return None
         
         # Scale and impute
@@ -744,8 +670,10 @@ class AnalysisPipeline:
             
             temp_colors = {
                 "1.5": "#D9420B",
-                "2.0": "#035AA6",
-                "Above 2.0": "#338474"
+                "2": "#035AA6",
+                "above 2": "#338474",
+                "failed-vetting": "#999999",
+                "no-climate-assessment": "#CCCCCC"
             }
             
             fig = plt.figure(figsize=(10, 8))
@@ -753,10 +681,26 @@ class AnalysisPipeline:
             
             for temp_label, hex_color in temp_colors.items():
                 if temp_label in pca_df['temp_bucket'].values:
-                    mask = pca_df['temp_bucket'] == temp_label
+                    # Handle both old and new temp_bucket values for backward compatibility
+                    if temp_label == "2.0":
+                        mask = pca_df['temp_bucket'] == "2"
+                        display_label = "2.0°C"
+                    elif temp_label == "Above 2.0":
+                        mask = pca_df['temp_bucket'] == "above 2"
+                        display_label = "Above 2.0°C"
+                    else:
+                        mask = pca_df['temp_bucket'] == temp_label
+                        if temp_label == "1.5":
+                            display_label = "1.5°C"
+                        elif temp_label == "2":
+                            display_label = "2.0°C"
+                        elif temp_label == "above 2":
+                            display_label = "Above 2.0°C"
+                        else:
+                            display_label = temp_label.replace("-", " ").title()
                     pts = X_pca[mask.values][:, 1:4] if X_pca.shape[1] >= 4 else X_pca[mask.values][:, :3]
                     if len(pts) > 0:
-                        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], color=hex_color, alpha=0.2, label=f"{temp_label}°C")
+                        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], color=hex_color, alpha=0.2, label=display_label)
             
             ax.set_title("3D PCA Projection with Temperature Buckets")
             ax.set_xlabel("PC2")
@@ -913,7 +857,7 @@ def main():
     parser.add_argument('sector_assignment', type=str,
                        help='Path to sector assignment CSV file (required)')
     parser.add_argument('--category-mapping', type=str, default=None,
-                       help='Path to CSV or Excel file (.xlsx) with model, scenario, and Category columns (optional, for joining Category from external source)')
+                       help='DEPRECATED: Category is now expected to be in the data file itself. This parameter is kept for backward compatibility but will be ignored.')
     parser.add_argument('--output-folder', type=str, default=None,
                        help='Output folder name (will prompt if not provided)')
     parser.add_argument('--num-combinations', type=int, default=10,

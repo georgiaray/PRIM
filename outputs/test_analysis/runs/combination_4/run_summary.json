@@ -1,0 +1,122 @@
+{
+  "combination": 4,
+  "variables": [
+    "Primary Energy|Biomass",
+    "Emissions|CO2|AFOLU",
+    "Final Energy|Transportation|Electricity",
+    "Secondary Energy|Electricity|Fossil",
+    "Final Energy|Industry",
+    "Final Energy|Industry|Solids",
+    "Emissions|CO2|Energy|Demand|Residential and Commercial",
+    "Final Energy|Residential and Commercial",
+    "Final Energy|Transportation|Liquids|Oil",
+    "Emissions|CO2|Energy|Demand|Transportation",
+    "Final Energy|Solids|Biomass",
+    "Carbon Sequestration|CCS|Biomass",
+    "Emissions|CH4|AFOLU",
+    "Secondary Energy|Electricity|Nuclear",
+    "Final Energy|Industry|Electricity",
+    "Secondary Energy|Electricity|Oil",
+    "Final Energy|Industry|Hydrogen",
+    "Final Energy|Industry|Gases",
+    "Final Energy|Industry|Liquids",
+    "Final Energy|Transportation|Gases",
+    "Final Energy|Transportation",
+    "Final Energy|Transportation|Hydrogen"
+  ],
+  "n_scenarios": 1366,
+  "max_correlation": 0.8750148340680863,
+  "prim": {
+    "n_restricted_vars": 19,
+    "restricted_vars": [
+      "Primary Energy|Biomass (2030)",
+      "Primary Energy|Biomass (2050)",
+      "Emissions|CO2|AFOLU (2030)",
+      "Emissions|CO2|AFOLU (2050)",
+      "Final Energy|Transportation|Electricity (2030)",
+      "Final Energy|Transportation|Electricity (2050)",
+      "Secondary Energy|Electricity|Fossil (2030)",
+      "Secondary Energy|Electricity|Fossil (2050)",
+      "Final Energy|Industry|Solids (2050)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2030)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2050)",
+      "Final Energy|Transportation|Liquids|Oil (2030)",
+      "Final Energy|Transportation|Liquids|Oil (2050)",
+      "Emissions|CO2|Energy|Demand|Transportation (2050)",
+      "Carbon Sequestration|CCS|Biomass (2050)",
+      "Emissions|CH4|AFOLU (2030)",
+      "Final Energy|Industry|Electricity (2050)",
+      "Secondary Energy|Electricity|Oil (2030)",
+      "Final Energy|Transportation (2050)"
+    ],
+    "best_f1": 0.562
+  },
+  "shap": {
+    "top_10_vars": [
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2050)",
+      "Emissions|CO2|Energy|Demand|Transportation (2050)",
+      "Final Energy|Transportation|Electricity (2050)",
+      "Emissions|CO2|AFOLU (2050)",
+      "Carbon Sequestration|CCS|Biomass (2050)",
+      "Final Energy|Industry|Hydrogen (2050)",
+      "Secondary Energy|Electricity|Nuclear (2050)",
+      "Secondary Energy|Electricity|Fossil (2050)",
+      "Primary Energy|Biomass (2050)",
+      "Final Energy|Industry|Liquids (2050)"
+    ],
+    "top_10_importance": [
+      1.0632432699203491,
+      0.8504658937454224,
+      0.8180062174797058,
+      0.7704970240592957,
+      0.6622319221496582,
+      0.54945307970047,
+      0.4952999949455261,
+      0.4949619770050049,
+      0.3713926076889038,
+      0.31521981954574585
+    ]
+  },
+  "rf": {
+    "top_10_vars": [
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2050)",
+      "Final Energy|Industry|Hydrogen (2050)",
+      "Emissions|CO2|Energy|Demand|Transportation (2050)",
+      "Final Energy|Transportation|Electricity (2050)",
+      "Final Energy|Industry|Solids (2050)",
+      "Carbon Sequestration|CCS|Biomass (2050)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2030)",
+      "Final Energy|Transportation|Gases (2050)",
+      "Emissions|CO2|AFOLU (2050)",
+      "Secondary Energy|Electricity|Fossil (2050)"
+    ],
+    "top_10_importance": [
+      0.0844204610514709,
+      0.0800779941786804,
+      0.06151880807531232,
+      0.05245336765342944,
+      0.040051089457079234,
+      0.0372094238624364,
+      0.031311408900627107,
+      0.02867579439438751,
+      0.027790173315344453,
+      0.026091704088038438
+    ]
+  },
+  "pca": {
+    "explained_variance": [
+      0.2114818136280566,
+      0.13272475441450196,
+      0.10048103451528881,
+      0.07403486375228174,
+      0.05083773535403402
+    ],
+    "cumulative_variance": [
+      0.2114818136280566,
+      0.34420656804255856,
+      0.44468760255784734,
+      0.5187224663101291,
+      0.5695602016641631
+    ]
+  }
+}

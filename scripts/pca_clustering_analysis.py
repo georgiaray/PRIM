@@ -21,8 +21,10 @@ from scipy.spatial import ConvexHull
 # Temperature bucket colors
 temp_colors = {
     "1.5": "#D9420B",
-    "2.0": "#035AA6",
-    "Above 2.0": "#338474"
+    "2": "#035AA6",
+    "above 2": "#338474",
+    "failed-vetting": "#999999",
+    "no-climate-assessment": "#CCCCCC"
 }
 
 
@@ -88,11 +90,28 @@ def plot_3d_pca_projection(df_pca, X_pca):
     ax = fig.add_subplot(111, projection='3d')
     
     for temp_label, hex_color in temp_colors.items():
-        mask = df_pca['temp_bucket'] == temp_label
+        # Handle both old and new temp_bucket values for backward compatibility
+        if temp_label == "2.0":
+            mask = df_pca['temp_bucket'] == "2"
+            display_label = "2.0°C"
+        elif temp_label == "Above 2.0":
+            mask = df_pca['temp_bucket'] == "above 2"
+            display_label = "Above 2.0°C"
+        else:
+            mask = df_pca['temp_bucket'] == temp_label
+            # Format label for display
+            if temp_label == "1.5":
+                display_label = "1.5°C"
+            elif temp_label == "2":
+                display_label = "2.0°C"
+            elif temp_label == "above 2":
+                display_label = "Above 2.0°C"
+            else:
+                display_label = temp_label.replace("-", " ").title()
         pts = X_pca[mask.values][:, 1:4]  # Project on PC2, PC3, PC4
         
         # Scatter points
-        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], color=hex_color, alpha=0.2, label=f"{temp_label}°C")
+        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], color=hex_color, alpha=0.2, label=display_label)
         
         # Convex hull if enough points
         if pts.shape[0] >= 4:

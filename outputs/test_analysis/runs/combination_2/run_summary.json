@@ -1,0 +1,124 @@
+{
+  "combination": 2,
+  "variables": [
+    "Secondary Energy|Liquids|Biomass",
+    "Carbon Sequestration|CCS|Biomass",
+    "Secondary Energy|Electricity|Gas",
+    "Secondary Energy|Electricity|Fossil",
+    "Final Energy|Industry|Liquids",
+    "Final Energy|Industry|Gases",
+    "Final Energy|Residential and Commercial",
+    "Emissions|CO2|Energy|Demand|Residential and Commercial",
+    "Final Energy|Transportation",
+    "Final Energy|Transportation|Hydrogen",
+    "Emissions|CO2|AFOLU",
+    "Primary Energy|Biomass",
+    "Final Energy|Solids|Biomass",
+    "Secondary Energy|Electricity|Coal",
+    "Secondary Energy|Electricity|Renewables (incl. Biomass)",
+    "Final Energy|Transportation|Electricity",
+    "Final Energy|Industry|Hydrogen",
+    "Final Energy|Industry",
+    "Emissions|CO2|Energy|Demand|Industry",
+    "Emissions|CO2|Energy|Demand|Transportation",
+    "Final Energy|Transportation|Liquids|Oil",
+    "Final Energy|Transportation|Gases"
+  ],
+  "n_scenarios": 1371,
+  "max_correlation": 0.8870215563392563,
+  "prim": {
+    "n_restricted_vars": 21,
+    "restricted_vars": [
+      "Carbon Sequestration|CCS|Biomass (2030)",
+      "Carbon Sequestration|CCS|Biomass (2050)",
+      "Secondary Energy|Electricity|Fossil (2030)",
+      "Final Energy|Industry|Gases (2030)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2030)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2050)",
+      "Final Energy|Transportation (2030)",
+      "Final Energy|Transportation (2050)",
+      "Final Energy|Transportation|Hydrogen (2030)",
+      "Final Energy|Transportation|Hydrogen (2050)",
+      "Emissions|CO2|AFOLU (2030)",
+      "Emissions|CO2|AFOLU (2050)",
+      "Primary Energy|Biomass (2050)",
+      "Final Energy|Solids|Biomass (2030)",
+      "Secondary Energy|Electricity|Coal (2050)",
+      "Secondary Energy|Electricity|Renewables (incl. Biomass) (2030)",
+      "Final Energy|Transportation|Electricity (2030)",
+      "Emissions|CO2|Energy|Demand|Industry (2050)",
+      "Emissions|CO2|Energy|Demand|Transportation (2050)",
+      "Final Energy|Transportation|Liquids|Oil (2030)",
+      "Final Energy|Transportation|Liquids|Oil (2050)"
+    ],
+    "best_f1": 0.521
+  },
+  "shap": {
+    "top_10_vars": [
+      "Final Energy|Industry|Hydrogen (2050)",
+      "Emissions|CO2|Energy|Demand|Industry (2050)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2050)",
+      "Emissions|CO2|AFOLU (2050)",
+      "Final Energy|Transportation|Electricity (2050)",
+      "Carbon Sequestration|CCS|Biomass (2050)",
+      "Primary Energy|Biomass (2050)",
+      "Secondary Energy|Electricity|Fossil (2050)",
+      "Secondary Energy|Electricity|Renewables (incl. Biomass) (2050)",
+      "Final Energy|Residential and Commercial (2050)"
+    ],
+    "top_10_importance": [
+      1.0435936450958252,
+      0.9589859843254089,
+      0.7600662112236023,
+      0.5596892237663269,
+      0.5190318822860718,
+      0.4841001033782959,
+      0.4749849736690521,
+      0.4265984892845154,
+      0.4103491008281708,
+      0.36987632513046265
+    ]
+  },
+  "rf": {
+    "top_10_vars": [
+      "Final Energy|Industry|Hydrogen (2050)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2050)",
+      "Emissions|CO2|Energy|Demand|Industry (2050)",
+      "Emissions|CO2|Energy|Demand|Transportation (2050)",
+      "Final Energy|Transportation|Electricity (2050)",
+      "Secondary Energy|Electricity|Renewables (incl. Biomass) (2050)",
+      "Secondary Energy|Electricity|Coal (2030)",
+      "Carbon Sequestration|CCS|Biomass (2050)",
+      "Emissions|CO2|AFOLU (2050)",
+      "Final Energy|Transportation|Gases (2050)"
+    ],
+    "top_10_importance": [
+      0.0830397570125783,
+      0.07344021022623988,
+      0.07081949094985818,
+      0.04879275592317625,
+      0.04778945525512662,
+      0.04106700821334071,
+      0.032883300375025105,
+      0.03089643354553486,
+      0.02591265836748175,
+      0.0256079131136055
+    ]
+  },
+  "pca": {
+    "explained_variance": [
+      0.25965348834954843,
+      0.11394954118717497,
+      0.0924741138932974,
+      0.08006993120630762,
+      0.04934347612931728
+    ],
+    "cumulative_variance": [
+      0.25965348834954843,
+      0.3736030295367234,
+      0.4660771434300208,
+      0.5461470746363284,
+      0.5954905507656457
+    ]
+  }
+}

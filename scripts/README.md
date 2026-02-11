@@ -174,10 +174,12 @@ AIM/CGE 2.0,ADVANCE_2020_2C-2100,C3
 
 **How it's used:**
 - The pipeline joins this mapping with your data using `model` and `scenario` as keys
-- Categories are automatically converted to temperature buckets:
+- Categories are automatically converted to temperature buckets (see `data/README.md` for full mapping):
   - C1, C2 → `1.5` (1.5°C scenarios)
-  - C3, C4 → `2.0` (2.0°C scenarios)
-  - Others → `Above 2.0`
+  - C3, C4 → `2` (2.0°C scenarios)
+  - C5, C6, C7, C8 → `above 2` (above 2.0°C scenarios)
+  - `failed-vetting` → `failed-vetting` (scenarios that failed vetting)
+  - `no-climate-assessment` → `no-climate-assessment` (scenarios without climate assessment)
 - The `temp_bucket` column is then used for binary classification (1.5°C vs others)
 
 **Note:** If your data already has a `Category` column, you don't need this file. The pipeline will automatically create `temp_bucket` from the existing `Category` column.

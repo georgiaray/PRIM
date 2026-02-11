@@ -1,0 +1,120 @@
+{
+  "combination": 3,
+  "variables": [
+    "Emissions|CO2|AFOLU",
+    "Emissions|CH4|AFOLU",
+    "Secondary Energy|Electricity",
+    "Secondary Energy|Electricity|Coal",
+    "Final Energy|Industry|Hydrogen",
+    "Final Energy|Industry|Liquids",
+    "Emissions|CO2|Energy|Demand|Residential and Commercial",
+    "Final Energy|Residential and Commercial",
+    "Final Energy|Transportation|Gases",
+    "Final Energy|Transportation",
+    "Carbon Sequestration|CCS|Biomass",
+    "Primary Energy|Biomass",
+    "Final Energy|Solids|Biomass",
+    "Secondary Energy|Electricity|Oil",
+    "Secondary Energy|Electricity|Solar",
+    "Final Energy|Industry|Electricity",
+    "Final Energy|Industry|Solids",
+    "Final Energy|Industry|Gases",
+    "Final Energy|Industry",
+    "Final Energy|Transportation|Liquids|Oil",
+    "Final Energy|Transportation|Hydrogen",
+    "Emissions|CO2|Energy|Demand|Transportation"
+  ],
+  "n_scenarios": 1366,
+  "max_correlation": 0.8750148340680863,
+  "prim": {
+    "n_restricted_vars": 17,
+    "restricted_vars": [
+      "Emissions|CO2|AFOLU (2030)",
+      "Emissions|CO2|AFOLU (2050)",
+      "Secondary Energy|Electricity (2030)",
+      "Secondary Energy|Electricity (2050)",
+      "Secondary Energy|Electricity|Coal (2030)",
+      "Secondary Energy|Electricity|Coal (2050)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2030)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2050)",
+      "Final Energy|Transportation (2030)",
+      "Final Energy|Transportation (2050)",
+      "Carbon Sequestration|CCS|Biomass (2050)",
+      "Primary Energy|Biomass (2050)",
+      "Final Energy|Solids|Biomass (2030)",
+      "Secondary Energy|Electricity|Oil (2050)",
+      "Final Energy|Industry|Electricity (2050)",
+      "Final Energy|Transportation|Liquids|Oil (2050)",
+      "Emissions|CO2|Energy|Demand|Transportation (2050)"
+    ],
+    "best_f1": 0.523
+  },
+  "shap": {
+    "top_10_vars": [
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2050)",
+      "Emissions|CO2|Energy|Demand|Transportation (2050)",
+      "Secondary Energy|Electricity|Coal (2050)",
+      "Emissions|CO2|AFOLU (2050)",
+      "Final Energy|Industry|Hydrogen (2050)",
+      "Carbon Sequestration|CCS|Biomass (2050)",
+      "Emissions|CH4|AFOLU (2050)",
+      "Final Energy|Industry|Gases (2050)",
+      "Final Energy|Solids|Biomass (2050)",
+      "Final Energy|Residential and Commercial (2050)"
+    ],
+    "top_10_importance": [
+      0.9733890295028687,
+      0.9517496824264526,
+      0.9128246307373047,
+      0.6915780901908875,
+      0.6152730584144592,
+      0.5999563932418823,
+      0.5754080414772034,
+      0.32384660840034485,
+      0.3075135052204132,
+      0.2960492968559265
+    ]
+  },
+  "rf": {
+    "top_10_vars": [
+      "Final Energy|Industry|Hydrogen (2050)",
+      "Emissions|CO2|Energy|Demand|Residential and Commercial (2050)",
+      "Emissions|CO2|Energy|Demand|Transportation (2050)",
+      "Secondary Energy|Electricity (2050)",
+      "Final Energy|Industry|Solids (2050)",
+      "Secondary Energy|Electricity|Solar (2050)",
+      "Secondary Energy|Electricity|Coal (2050)",
+      "Carbon Sequestration|CCS|Biomass (2050)",
+      "Secondary Energy|Electricity|Coal (2030)",
+      "Secondary Energy|Electricity|Solar (2030)"
+    ],
+    "top_10_importance": [
+      0.09491694697557965,
+      0.08152482172432603,
+      0.04796276759065112,
+      0.04055184534769547,
+      0.036848226209708575,
+      0.03496586552870654,
+      0.03388196489235523,
+      0.03268374896304963,
+      0.03220200561841287,
+      0.02784903298959615
+    ]
+  },
+  "pca": {
+    "explained_variance": [
+      0.2071465879688621,
+      0.14593080993820964,
+      0.09653006843231653,
+      0.07039615648156028,
+      0.05652535765163281
+    ],
+    "cumulative_variance": [
+      0.2071465879688621,
+      0.3530773979070717,
+      0.44960746633938825,
+      0.5200036228209486,
+      0.5765289804725814
+    ]
+  }
+}
