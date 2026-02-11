@@ -1,0 +1,27 @@
+# PRIM Analysis Project Dependencies
+
+# Core data manipulation
+pandas>=1.5.0
+numpy>=1.23.0
+
+# Visualization
+matplotlib>=3.6.0
+seaborn>=0.12.0
+
+# Machine learning
+scikit-learn>=1.2.0
+shap>=0.41.0
+xgboost>=1.7.0
+
+# PRIM analysis
+ema-workbench>=2.4.0
+# ipyparallel>=8.0.0  # Optional: for parallel evaluation (not required for basic PRIM)
+
+# Scientific computing
+scipy>=1.9.0
+
+# Data formats (required for Parquet support)
+pyarrow>=10.0.0
+
+# Excel file support (required for reading .xlsx files)
+openpyxl>=3.0.0

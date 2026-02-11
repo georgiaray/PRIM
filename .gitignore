@@ -1,6 +1,28 @@
+# Data files
 *.csv
 *.xlsx
-*.DS_Store
-__pycache__/
+data/
 
+# System files
+*.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments (any name)
+venv/
+env/
+ENV/
+.venv
+*venv*/
+*env*/
+*.venv
+
+# Outputs (keep structure, ignore large files)
+outputs/**/*.csv
+outputs/**/*.xlsx
 
